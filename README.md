@@ -1,123 +1,73 @@
-# Picseal
+# Picseal Local
 
-生成类似小米照片风格的莱卡水印照片。支持佳能、尼康、苹果、华为、小米、DJI 等设备的水印生成，可自动识别，也可自定义处理。
+一个完全在浏览器本地处理照片的批量相机水印工具，基于 [zhiweio/picseal](https://github.com/zhiweio/picseal) 改造。
 
-## 在线演示
+照片不会上传到服务器。NAS/Docker 容器只负责提供网页文件，EXIF 读取、预览、水印合成和全尺寸导出均在访问者的浏览器中完成。
 
-在线试用地址：
-- [picseal.vercel.app](https://picseal.vercel.app)
-- [picseal.zhiweio.me](https://picseal.zhiweio.me)
-- [zhiweio.github.io/picseal](https://zhiweio.github.io/picseal/)
+## 功能
 
-![应用截图](./public/screenshot.png)
+- 批量添加 JPG、PNG、WebP，并用缩略图队列逐张编辑。
+- 经典白底横幅与柔化模糊画布两种样式。
+- 柔化模式默认最大模糊强度，兼容横构图与竖构图。
+- 全尺寸高质量 JPEG、无损 PNG，以及 ZIP 批量打包。
+- 可选实验性保留 JPEG EXIF。
+- 从 EXIF 读取官方基础机型编号，例如 `ILCE-6700`。
+- 直接读取镜头原始焦段，不使用全画幅等效焦段。
+- 自动读取光圈、快门、ISO 和拍摄时间，不读取 GPS 位置。
+- 字体、字号和粗细保存在当前浏览器，下次打开自动恢复。
+- 预览和 Canvas 导出共用布局参数，减少排版偏差与文字截断。
 
-## 技术实现
+## 本地开发
 
-### EXIF 解析
+需要 Node.js 22 和 pnpm 11：
 
-使用了 Rust 库 `kamadak-exif` 从图片中提取得到 EXIF 信息并借助 WASM 技术嵌入前端 JavaScript 使用。
+```bash
+pnpm install
+pnpm run dev
+```
 
-### 水印生成
+Windows 测试电脑也可以双击 `启动Picseal测试版.cmd`，然后访问：
 
-通过 HTML 和 CSS 生成水印样式，能够做到动态调整实时预览。
+```text
+http://127.0.0.1:3000
+```
 
-### 图片生成
+质量检查：
 
-导出的图片是通过 `dom-to-image` JavaScript 库来将 DOM 转 JPEG/PNG 等格式图片，请注意这种实现生成的是和原图完全不一样的图片，可以看作屏幕截图的方式。
+```bash
+pnpm run lint
+pnpm run build
+```
 
-目前针对 JPEG 格式图片新增了复制原图 EXIF 信息嵌进导出的图片中，目前的实现方式比较简单粗暴，直接从原图二进制数据提取 EXIF 部分的数据，再同样以二进制格式进行拼接，不能确保稳定。
+## Docker 镜像
 
-### 改进
+推送到 `master` 分支后，GitHub Actions 会构建 DS920+ 可用的 `linux/amd64` 镜像并发布到：
 
-- [ ] 改用 Rust `little_exif` 库来实现对图片 EXIF 信息的读取和编辑。
-- [ ] 改用 Canvas 来实现水印，支持高度自定义。
+```text
+ghcr.io/ren8484/picseal-local:latest
+```
 
-## 部署方法
+同时保留 `sha-xxxx` 标签；推送 `v*` Git 标签时还会生成对应版本标签。
 
-### 使用 Vercel 部署
+群晖部署、私有镜像登录、端口转发与更新方法参见 [SYNOLOGY_DOCKER.md](./SYNOLOGY_DOCKER.md)。
 
-|           一键部署到 Vercel            |
-| :-----------------------------------: |
-| [![][deploy-button-image]][deploy-link] |
+## 技术栈
 
-### 本地部署
+- React 18、TypeScript、Vite 5
+- `exifr` 浏览器端 EXIF 解析
+- Canvas 全尺寸水印渲染
+- JSZip 浏览器端批量打包
+- Nginx Alpine 静态容器
+- GitHub Actions + GitHub Container Registry
 
-1. **克隆项目代码**：
-   ```bash
-   git clone https://github.com/zhiweio/picseal
-   ```
+## 隐私与 HTTP
 
-2. **安装依赖**：
-   ```bash
-   # 安装 Rustup（编译器）
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+- 原始照片和导出结果不会发送到 NAS 或第三方服务器。
+- 项目支持纯 HTTP 部署；公网 HTTP 会被浏览器标记为“不安全”。
+- HTTP 环境下普通上传、编辑和导出可用，但 PWA 离线安装能力可能受浏览器限制。
 
-   # 安装 wasm-pack
-   curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -y
-   ```
+## 上游与许可
 
-3. **构建并运行**：
-   ```bash
-   npm install
-   npm run build
-   npm run preview
-   ```
-
-### 使用 GitHub Pages 部署
-
-1. 修改 `vite.config.ts` 中的 `base` 配置为你的 GitHub Pages URL（例如：`https://<USERNAME>.github.io/<REPO>/`）：
-   ```javascript
-   import wasm from 'vite-plugin-wasm'
-
-   export default defineConfig({
-     plugins: [
-       react(),
-       wasm(),
-       topLevelAwait(),
-       visualizer({ open: true }),
-     ],
-     server: {
-       port: 3000,
-     },
-     build: {
-       outDir: 'dist',
-       target: 'esnext',
-     },
-     optimizeDeps: {
-       exclude: ['picseal'],
-     },
-     base: 'https://zhiweio.github.io/picseal/',
-   })
-   ```
-
-2. **构建并部署**：
-   ```bash
-   npm install
-   npm run pages
-   ```
-
-### 使用 Docker 部署
-
-1. 拉取镜像
-   ```bash
-   docker pull zhiweio/picseal:latest
-   ```
-
-2. 启动容器
-   ```bash
-   docker run -d -p 8080:80 picseal
-   ```
-
-3. 访问 http://localhost:8080
-
-## 作者
-
-- [@Wang Zhiwei](https://github.com/zhiweio)
-
-## 开源协议
-
-[MIT](https://choosealicense.com/licenses/mit/)
-
-<!-- 链接配置 -->
-[deploy-button-image]: https://vercel.com/button
-[deploy-link]: https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fzhiweio%2Fpicseal&project-name=picseal&repository-name=picseal
+- 上游作者：[@Wang Zhiwei](https://github.com/zhiweio)
+- 上游仓库：[zhiweio/picseal](https://github.com/zhiweio/picseal)
+- 许可证：[MIT](./LICENSE)

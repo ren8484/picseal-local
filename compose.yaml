@@ -1,0 +1,27 @@
+services:
+  picseal:
+    image: ghcr.io/ren8484/picseal-local:latest
+    container_name: picseal
+    ports:
+      - '${PICSEAL_PORT:-8188}:80'
+    restart: unless-stopped
+    mem_limit: 256m
+    cpus: 0.5
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    healthcheck:
+      test: [CMD-SHELL, 'wget -qO- http://127.0.0.1/ >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'

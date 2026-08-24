@@ -1,41 +1,22 @@
-FROM node:22 AS build
-
-RUN useradd -m picseal
-
-USER picseal
-
-ENV HOME=/home/picseal
-
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-
-ENV PATH="$HOME/.cargo/bin:$PATH"
-
-RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh -s -- -y
+FROM node:22-alpine AS build
 
 WORKDIR /app
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY . .
+RUN pnpm run build
 
-USER root
-
-RUN chown -R picseal:picseal /app && \
-    chmod -R 755 /app
-
-ENV NPM_VERSION=10.9.1
-RUN npm cache clean --force && \
-    npm install -g npm@"${NPM_VERSION}"
-
-RUN npm install && \
-    npm run build
-
-USER picseal
-
-FROM nginx:alpine AS production
+FROM nginx:1.29-alpine AS production
 
 COPY --from=build /app/dist /usr/share/nginx/html
-
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget -qO- http://127.0.0.1/ >/dev/null || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]

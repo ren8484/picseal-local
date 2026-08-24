@@ -3,7 +3,9 @@
 .vscode/
 dist/
 node_modules/
-src-wasm/target/
+src-wasm/
+scripts/
+.picframe-git-backup/
 .git/
 *.md
 LICENSE
@@ -11,7 +13,5 @@ stats.html
 vercel.json
 .dockerignore
 package-lock.json
-pnpm-lock.yaml
 Dockerfile
-.dockerignore
 .gitignore

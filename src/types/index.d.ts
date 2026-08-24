@@ -12,7 +12,6 @@ interface ExifData {
 export interface ExifParamsForm {
   model: string
   date: string
-  gps: string
   device: string
   brand: string
   brand_url: string
@@ -20,4 +19,14 @@ export interface ExifParamsForm {
   fontSize: string
   fontWeight: string
   fontFamily: string
+}
+
+export interface BatchPhoto {
+  id: string
+  file: File
+  name: string
+  type: string
+  url: string
+  exifBlob: Blob | null
+  formValue: ExifParamsForm
 }
