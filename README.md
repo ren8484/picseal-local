@@ -49,7 +49,9 @@ ghcr.io/ren8484/picseal-local:latest
 
 同时保留 `sha-xxxx` 标签；推送 `v*` Git 标签时还会生成对应版本标签。
 
-群晖部署、私有镜像登录、端口转发与更新方法参见 [SYNOLOGY_DOCKER.md](./SYNOLOGY_DOCKER.md)。
+GHCR 镜像已公开，无需登录即可拉取。DS920+ 上经过实际验证的 Container
+Manager 安装、`3888` 端口转发与更新方法参见
+[SYNOLOGY_DOCKER.md](./SYNOLOGY_DOCKER.md)。
 
 ## 技术栈
 

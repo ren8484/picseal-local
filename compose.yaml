@@ -3,10 +3,9 @@ services:
     image: ghcr.io/ren8484/picseal-local:latest
     container_name: picseal
     ports:
-      - '${PICSEAL_PORT:-8188}:80'
+      - '${PICSEAL_PORT:-3888}:80'
     restart: unless-stopped
     mem_limit: 256m
-    cpus: 0.5
     read_only: true
     security_opt:
       - no-new-privileges:true
