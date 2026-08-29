@@ -297,7 +297,7 @@ function App() {
           <div className="feature-control compact">
             <div>
               <strong>保留 EXIF</strong>
-              <span>{exportFormat === 'jpeg' ? '实验性，仅 JPEG' : 'PNG 不支持写回 EXIF'}</span>
+              <span>{exportFormat === 'jpeg' ? '仅 JPEG，自动校正方向' : 'PNG 不支持写回 EXIF'}</span>
             </div>
             <Switch checked={exifEnable && exportFormat === 'jpeg'} disabled={exportFormat === 'png'} onChange={setExifEnable} />
           </div>
